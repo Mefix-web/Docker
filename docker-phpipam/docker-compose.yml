@@ -1,0 +1,35 @@
+version: 1.0
+
+services:
+  ipam:
+     image: pierrecdn/phpipam:1.4
+     environment:
+       - MYSQL_ENV_MYSQL_HOST=IP Address
+       - MYSQL_ENV_MYSQL_USER=phpipam
+       - MYSQL_ENV_MYSQL_ROOT_PASSWORD=
+  nginx:
+          image: nginx:1.23.1
+     volumes:
+       # Configuration files
+       - ./conf:/etc/nginx
+       # Certs directory
+       - ./certs/:/etc/certs
+     ports:
+       - "81:80"
+       - "443:443"
+     links:
+       - phpipam
+     networks:
+       - default
+       - front
+    
+     labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpipam.entrypoints=http-internal"
+      - "traefik.http.routers.phpipam.rule=Host(`ipam.yourict.net`)" 
+      - "traefik.http.services.phpipam.loadbalancer.server.port=?"
+networks:
+  front:
+    external:
+      name: traefik-portainer_default
+

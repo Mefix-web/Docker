@@ -1,0 +1,23 @@
+## traefik.yml
+
+# Entrypoints
+entryPoints:
+  http-internal:
+    address: ":80"
+  https-internal:
+    address: ":443"
+
+# Docker configuration backend
+providers:
+  docker:
+    network: traefik-portainer_default
+    defaultRule: "Host(`{{ trimPrefix `/` .Name }}.fqdn`)"
+    exposedByDefault: false
+
+# API and dashboard configuration
+api:
+  insecure: true
+  dashboard: true
+
+log:
+  level: "DEBUG"

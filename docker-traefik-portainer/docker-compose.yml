@@ -1,0 +1,35 @@
+version: '3.4'
+services:
+    traefik:
+        ports:
+            - 'IP_Address:80:80'
+        volumes:
+            - './traefik/traefik.yml:/etc/traefik/traefik.yml'
+            - '/var/run/docker.sock:/var/run/docker.sock'
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.traefik.rule=Host(`traefik.fqdn`)
+            - traefik.http.routers.traefik.entrypoints=http-internal
+            - traefik.http.services.traefik.loadbalancer.server.port=8080
+        restart: always
+        container_name: traefik
+        image: traefik
+
+    portainer:
+        image: portainer/portainer-ce:latest
+        container_name: portainer
+        restart: unless-stopped
+        security_opt:
+            - no-new-privileges:true
+        volumes:
+            - /etc/localtime:/etc/localtime:ro
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - ./portainer/portainer-data:/data
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.portainer.entrypoints=http-internal"
+            - "traefik.http.routers.portainer.rule=Host(`portainer.fqdn`)"
+            - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+        environment:
+            - http_proxy=Proxy
+            - https_proxy=Proxy
