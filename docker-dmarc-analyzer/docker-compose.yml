@@ -5,27 +5,16 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.3.1
     environment:
       - discovery.type=single-node
-        #- bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
     volumes:
       - ./data/esnode0:/usr/share/elasticsearch/data
     restart: always
- 
-  # davmail:
-  #   container_name: davmail
-  #   image: jberrenberg/davmail
-  #   expose:
-  #     - 1143
-  #   volumes:
-  #     - ./config/davmail.properties:/etc/davmail/davmail.properties:ro
-  #   restart: always
-
+    
   parsedmarc:
     container_name: parsedmarc
     image: bongoeadgc6/parsedmarc:stable
     links:
       - elasticsearch
-      # - davmail
     command: tail -f /dev/null
     volumes:
       - ./config/parsedmarc.ini:/etc/parsedmarc.ini:ro
@@ -38,13 +27,11 @@ services:
       - elasticsearch
     environment:
       - SERVER_NAME=dmarcanalyzer.fqdn
-      #- ELASTICSEARCH_HOSTS=http://elasticsearch:
       - VIRTUAL_HOST=dmarcanalyzer.fqdn
       - VIRTUAL_NETWORK=proxy-ssl
       - VIRTUAL_PORT=5601
       - CERT_NAME=shared
-        #volumes:
-            #- ./config/kibana.yml:/usr/share/kibana/config/kibana.yml
+
     restart: always
     networks:
       - default
