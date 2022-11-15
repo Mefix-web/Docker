@@ -1,0 +1,33 @@
+version: "3"
+
+services:
+  nginx:
+    image: nginx:stable
+    container_name: infraplanning_nginx
+    links:
+      - php
+    volumes:
+      - ./soplanning/:/var/www/html/
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    labels:
+     - "traefik.enable=true"
+     - "traefik.http.routers.php.entrypoints=http-internal"
+     - "traefik.http.routers.php.rule=Host(`infraplanning.docker.`)"
+     - "traefik.http.services.php.loadbalancer.server.port=80"
+    networks:
+      - default
+      - traefik
+  php:
+    build: ./php/
+    container_name: infraplanning_php
+    volumes:
+      - ./soplanning/:/var/www/html/
+    environment:
+     - HTTP_PROXY=http://proxy
+     - HTTPS_PROXY=http://proxy
+
+networks:
+  traefik:
+    external:
+      name: traefik-portainer_default
+
