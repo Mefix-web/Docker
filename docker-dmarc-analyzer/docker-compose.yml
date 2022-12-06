@@ -1,4 +1,4 @@
-version: '3.0'
+version: '3.5'
 services:
   elasticsearch:
     container_name: elasticsearch
@@ -6,32 +6,40 @@ services:
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xmx2g -Xms2g"
+      - http_proxy=proxy_setting
+      - https_proxy=proxy_setting
     volumes:
       - ./data/esnode0:/usr/share/elasticsearch/data
     restart: always
-    
+ 
   parsedmarc:
     container_name: parsedmarc
     image: bongoeadgc6/parsedmarc:stable
     links:
       - elasticsearch
-    command: tail -f /dev/null
     volumes:
       - ./config/parsedmarc.ini:/etc/parsedmarc.ini:ro
     restart: always
 
-  kibana:
-    container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.3.1
+  grafana:
+    build: ./grafana/
+    container_name: grafana_dmarc
+    user: root
     links:
       - elasticsearch
     environment:
-      - SERVER_NAME=dmarcanalyzer.fqdn
-      - VIRTUAL_HOST=dmarcanalyzer.fqdn
-      - VIRTUAL_NETWORK=proxy-ssl
-      - VIRTUAL_PORT=5601
-      - CERT_NAME=shared
-
+      GF_INSTALL_PLUGINS: grafana-piechart-panel,grafana-worldmap-panel
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_SERVER_PROTOCOL: http
+      GF_SERVER_HTTP_PORT: 5601      
+      GF_RENDERING_SERVER_URL: http://URL
+      GF_DATABASE_SSL_MODE: skip-verify
+      GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE: 1
+      http_proxy: proxy_setting/
+      https_proxy: proxy_setting/
+      no_proxy: elasticsearch
+      GF_DATABASE_SSL_MODE: skip-verify
+      GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE: 1
     restart: always
     networks:
       - default
@@ -39,7 +47,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.dmarcanalyzer.entrypoints=http-internal"
-      - "traefik.http.routers.dmarcanalyzer.rule=Host(`dmarcanalyzer.fqdn`)"
+      - "traefik.http.routers.dmarcanalyzer.rule=Host(`URL`)"
       - "traefik.http.services.dmarcanalyzer.loadbalancer.server.port=5601"
 
 networks:
